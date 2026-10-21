@@ -1,0 +1,36 @@
+name: Build BSOFT Session Manager
+on:
+  push:
+    paths:
+      - 'bsoft-session-manager/**'
+      - '.github/workflows/build-bsoft-session-manager.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: bsoft-session-manager
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'bsoft-session-manager/requirements.txt'
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Build exe
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed --name BSOFT-Session-Manager --collect-all rapidocr_onnxruntime --collect-all onnxruntime session_manager.py
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: BSOFT-Session-Manager-Windows
+          path: bsoft-session-manager/dist/BSOFT-Session-Manager.exe
+          if-no-files-found: error
